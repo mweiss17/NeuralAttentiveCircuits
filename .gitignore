@@ -1,0 +1,5 @@
+.idea/
+experiments/
+*__pycache__*
+neural_attentive_circuits/data/assets/nlvr2/
+neural_attentive_circuits.egg-info/

@@ -1,0 +1,12 @@
+criterion:
+  graph_sparsity:
+    type: watts_strogatz_regularization
+    use: true
+    kwargs:
+      __speedrun__: purge
+      k: 32
+      p: 0.4
+      loss_type: mse
+      regularize_input_latents: false
+      regularize_mediator_latents: true
+      regularize_output_latents: false

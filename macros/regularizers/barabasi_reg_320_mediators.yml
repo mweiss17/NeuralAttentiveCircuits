@@ -1,0 +1,11 @@
+criterion:
+  graph_sparsity:
+    type: barabassi_albert_regularization
+    use: true
+    kwargs:
+      __speedrun__: purge
+      new_edges_per_node: 2
+      loss_type: mse
+      regularize_input_latents: false
+      regularize_mediator_latents: true
+      regularize_output_latents: false

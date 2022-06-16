@@ -1,0 +1,177 @@
+criterion:
+  graph_sparsity:
+    hinge: 0.6
+    kwargs:
+      loss_type: mse
+      new_edges_per_node: 2
+      regularize_input_latents: false
+      regularize_mediator_latents: true
+      regularize_output_latents: false
+    type: barabassi_albert_regularization
+    use: true
+    weight: 0.1
+  label_smoothing: 0.1
+  mixup_and_cutmix:
+    kwargs:
+      cutmix_alpha: 1.0
+      cutmix_minmax: null
+      mixup_alpha: 0.8
+      mode: batch
+      prob: 1.0
+      switch_prob: 0.5
+    use: true
+data:
+  dataset:
+    kwargs:
+      aa: rand-m9-mstd0.5-inc1
+      color_jitter: 0.4
+      input_size: 224
+      recount: 1
+      remode: pixel
+      reprob: 0.25
+      resplit: false
+      train_interpolation: bicubic
+    name: IMNET
+  loader:
+    kwargs:
+      # This is what fits on a single V100-32GB
+      batch_size: 8
+      num_workers: 10
+      pin_memory: true
+    val_batch_size_multiplier: 0.1875
+  ood_dataset:
+    name: IMNET-R
+  sampler:
+    repeated_augments: 3
+
+model:
+  find_unused_parameters_in_ddp: false
+  kwargs:
+    input_dim: 3
+    input_tokenizer_kwargs:
+      capacity_preset: femto
+      num_stages: 2
+      positional_grid_kwargs:
+        dim: 64
+        grid_size:
+        - 28
+        - 28
+    input_tokenizer_type: ConvNeXtImageTokenizer
+    latent_graph_kwargs:
+      code_dim: 768
+      code_noise_scale: null
+      disable_input_mediator_communication: true
+      enable_input_output_communication: false
+      ffn_capacity_factor: 3
+      head_dim: 64
+      input_latent_kwargs:
+        graph_preset: null
+        learnable_signatures: false
+      latent_seeder_kwargs:
+        use_code_as_mean_state: true
+        use_state_noise: false
+      layer_scale_initial_value: null
+      mediator_latent_kwargs:
+        graph_generator_kwargs:
+          m: 2
+          n: 1280
+        graph_preset: barabasi-albert
+        learnable_codes: true
+        learnable_signatures: true
+      mod_fc_cls: ModFC
+      mod_fc_kwargs:
+        add_one_to_scale: true
+        learnable_scale_gain: true
+        scale_gain: 0.1
+      num_heads: 12
+      num_input_latents: 1280
+      num_iterations: 8
+      num_mediator_latents: 1280
+      num_output_latents: 128
+      output_latent_kwargs:
+        graph_preset: null
+        learnable_signatures: true
+      path_drop_prob: 0.0
+      propagator_kwargs:
+        ffn_kwargs:
+          use_geglu: true
+        latent_attention_kwargs:
+          kernel_kwargs:
+            learnable_bandwidth: false
+            stochastic_kernel: true
+            stochastic_sampling_temperature: 0.5
+            truncation: null
+          kernel_type: DotProductKernel
+          mask_attn_scores_with_affinities: true
+          qkv_bias: false
+          share_layernorm: true
+      read_in_kwargs:
+        ffn_kwargs:
+          use_geglu: true
+        include_residual_in_read_in_attention: true
+        num_heads: 1
+        path_drop_prob: 0.0
+        read_in_attention_kwargs:
+          qkv_bias: false
+        read_in_layer_scale_initial_value: null
+      read_out_kwargs:
+        ffn_kwargs:
+          use_geglu: true
+        include_residual_in_latent_attention: false
+        latent_attention_kwargs:
+          kernel_kwargs:
+            learnable_bandwidth: false
+            stochastic_kernel: true
+            stochastic_sampling_temperature: 0.5
+            truncation: null
+          kernel_type: DotProductKernel
+          mask_attn_scores_with_affinities: true
+          qkv_bias: false
+          share_layernorm: false
+        num_heads: 1
+        pre_output_layernorm: false
+        use_head: false
+      share_propagator_weights: false
+      signature_dim: 64
+      use_code_noise_in_latent_seeder: false
+      use_input_states_as_mediator_states: true
+    latent_graph_type: LatentGraph
+    output_dim: 1000
+    output_tokenizer_kwargs:
+      softmax_type: vanilla
+    output_tokenizer_type: OutputLatentPooling
+    simplified_interface: true
+    state_dim: 768
+  name: NeuralCompiler
+  set_static_graph: true
+optimizer:
+  kwargs:
+    eps: 1.0e-08
+    filter_bias_and_bn: true
+    lr: 0.0003
+    momentum: 0.9
+    weight_decay: 0.05
+  name: adamw
+  no_weight_decay_filter: param.dim() <= 1 or name.endswith('bias') or name.endswith('signatures_')
+    or name.endswith('grid')
+scheduler:
+  kwargs:
+    cooldown_epochs: 10
+    decay_rate: 0.1
+    min_lr: 1.0e-05
+    warmup_epochs: 10
+    warmup_lr: 1.0e-06
+  name: cosine
+training:
+  checkpoint_every: 6
+  clip_grad: null
+  grad_acc: 8
+  ema:
+    decay: 0.99996
+    device: cpu
+    use: false
+  num_epochs: 300
+  use_amp: true
+wandb:
+  log_every: 20
+  use: false
